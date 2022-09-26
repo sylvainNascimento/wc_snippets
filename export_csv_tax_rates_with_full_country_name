@@ -1,0 +1,32 @@
+<?php 
+
+// Script at WP root
+
+include 'wp-load.php';
+
+$all_tax_rates = [];
+$tax_classes = WC_Tax::get_tax_classes(); // Retrieve all tax classes.
+if ( !in_array( '', $tax_classes ) ) { // Make sure "Standard rate" (empty class name) is present.
+    array_unshift( $tax_classes, '' );
+}
+foreach ( $tax_classes as $tax_class ) { // For each tax class, get all rates.
+    $taxes = WC_Tax::get_rates_for_tax_class( $tax_class );
+    $all_tax_rates = array_merge( $all_tax_rates, $taxes );
+}
+
+$fp = fopen('rates.csv', 'w');
+
+foreach ($all_tax_rates as $rate):
+
+    $row = [
+        $rate->tax_rate_country,
+        WC()->countries->countries[ $rate->tax_rate_country ],
+        number_format((float)$rate->tax_rate, 2, '.', '') . '%',
+    ];
+
+    fputcsv($fp, $row);
+
+
+endforeach;
+
+fclose($fp);
